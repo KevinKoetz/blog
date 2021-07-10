@@ -13,7 +13,7 @@ const site = {
     this.main = document.getElementsByTagName("main")[0];
 
     //Get all Post Names
-    const response = await this.getFileFromServer("/db/posts.json");
+    const response = await this.getFileFromServer("./db/posts.json");
     this.posts = JSON.parse(response)["names"];
 
     //Load initial Posts
