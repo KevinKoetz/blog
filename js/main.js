@@ -28,7 +28,7 @@ const site = {
   loadPosts: async function (postNames, appendPosts = false) {
     const responses = [];
     for (const postName of postNames) {
-      responses.push(this.getFileFromServer(`/posts/${postName}`));
+      responses.push(this.getFileFromServer(`./posts/${postName}`));
     }
     if (appendPosts) {
       const postContents = await Promise.all(responses);
