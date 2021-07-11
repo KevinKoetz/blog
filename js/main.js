@@ -67,7 +67,7 @@ const site = {
     /*TODO: Implement relative Paths like "./file" or "../folder/file" */
     /*TODO: Status Code handling*/
     let url = null;
-    if (path.startsWith("/")) url = this.root + path;
+    if (path.startsWith("/")) url = this.root + window.location.pathname + path;
     return await new Promise((resolve, reject) => {
       const httpRequest = new XMLHttpRequest();
       httpRequest.onreadystatechange = () => {
