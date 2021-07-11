@@ -10,55 +10,56 @@ const site = {
     document.body.addEventListener("click", this.clickHandler.bind(this));
 
     //Save main element for later
-    this.main = document.getElementsByTagName("main")[0];
+    this.main = document.getElementById("main");
 
     //Get all Post Names
-    const response = await this.getFileFromServer("./db/posts.json");
+    const response = await this.getFileFromServer("/db/posts.json");
     this.posts = JSON.parse(response)["names"];
 
     //Load initial Posts
-    if (window.location.hash === "" || window.location.hash === "#/") {
-      this.loadContent(window.location.hash);
-    } else {
-      this.loadContent(window.location.hash);
-    }
+    this.resolveHashRoute(window.location.hash);
   },
 
-  /*TODO: Dont use Element.innerHTML */
-  loadPosts: async function (postNames, appendPosts = false) {
+  resolveHashRoute: async function (hash) {
+    if("" === hash || "#/" === hash){
+      let posts = await this.getPosts(this.posts.slice(0, 3));
+      let content = "";
+      for(const post of posts) content += post;
+      this.loadContent(content,this.main);
+    }
+
+    if(/#\/posts\/\d*-\d*$/.test(hash)){
+      /*TODO: Implement post loading with relative index "#/posts/0-2" should load the posts with index 0,1,2 in this.posts*/
+    }
+
+    if(/^#\/posts\//.test(hash)){
+      let content = await this.getPosts([hash.match(/[^\/]*$/)])[0];
+      this.loadContent(content, this.main);
+    }
+
+    if(/^#\/pages\//.test(hash)){
+      let content = await this.getFileFromServer(`/pages/${hash.match(/[^\/]*$/)}`);
+      this.loadContent(content, this.main);
+    }
+    
+  },
+
+  getPosts: async function (postNames){
     const responses = [];
     for (const postName of postNames) {
-      responses.push(this.getFileFromServer(`./posts/${postName}`));
+      responses.push(this.getFileFromServer(`/posts/${postName}`));
     }
-    if (appendPosts) {
-      const postContents = await Promise.all(responses);
-      let combinedPostContent = "";
-      for (const postContent of postContents) {
-        combinedPostContent += postContent;
-      }
-      this.main.innerHTML += combinedPostContent;
-    } else {
-      const postContents = await Promise.all(responses);
-      let combinedPostContent = "";
-      for (const postContent of postContents) {
-        combinedPostContent += postContent;
-      }
-      this.main.innerHTML = combinedPostContent;
-    }
+    return await Promise.all(responses);
   },
 
-  loadContent: async function (hash) {
-    const path = hash.replace(/^#/, "");
-    if (path === "/" || path === "" || path === "./") {
-      this.loadPosts(this.posts.slice(0, 2));
-    } else {
-      main.innerHTML = await this.getFileFromServer(path);
-    }
+  /*TODO: Dont use Element.innerHTML and do some sanitization of the conent */
+  loadContent: async function(content, target = this.main){
+    target.innerHTML = content;
   },
 
   clickHandler: function (event) {
     if (event.srcElement.tagName === "A") {
-      this.loadContent(event.srcElement.hash);
+      this.resolveHashRoute(event.srcElement.hash);
     }
   },
 
@@ -67,7 +68,6 @@ const site = {
     /*TODO: Status Code handling*/
     let url = null;
     if (path.startsWith("/")) url = this.root + path;
-    if (path.startsWith("./")) url = this.root + window.location.pathname + path.replace(/^\//, "");
     return await new Promise((resolve, reject) => {
       const httpRequest = new XMLHttpRequest();
       httpRequest.onreadystatechange = () => {
